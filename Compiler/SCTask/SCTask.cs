@@ -7,7 +7,8 @@ using Microsoft.Build.Utilities;
 namespace Saltarelle.Compiler.SCTask {
 	public class SCTask : Task {
 		public class AppDomainInitializer : MarshalByRefObject {
-			public void DoIt() {
+			public void DoIt(TextWriter consoleOut) {
+				Console.SetOut(consoleOut);
 				// The module initializer seems to not work in all cases on mono.
 				var t = typeof(SCTask).Assembly.GetType("EmbedAssemblies.EmbeddedAssemblyLoader");
 				var m = t.GetMethod("Register", BindingFlags.Static | BindingFlags.Public);
@@ -19,7 +20,7 @@ namespace Saltarelle.Compiler.SCTask {
 			var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(SCTask).Assembly.Location) };
 			var ad = AppDomain.CreateDomain("SCTask", null, setup);
 			var initializer = (AppDomainInitializer)ad.CreateInstanceAndUnwrap(typeof(AppDomainInitializer).Assembly.FullName, typeof(AppDomainInitializer).FullName);
-			initializer.DoIt();
+			initializer.DoIt(Console.Out);
 			return ad;
 		}
 
@@ -27,8 +28,7 @@ namespace Saltarelle.Compiler.SCTask {
 			var oldOut = Console.Out;
 			var newOut = new StringWriter();
 			try {
-				Console.SetOut(newOut);
-				new AppDomainInitializer().DoIt();
+				new AppDomainInitializer().DoIt(newOut);
 				var asm = Assembly.Load("SCTaskWorker");
 				var worker = asm.GetType("Saltarelle.Compiler.SCTask.Worker");
 				return (bool)worker.GetMethod("DoWork").Invoke(null, new object[] { this, new Func<AppDomain>(CreateAppDomain) });
