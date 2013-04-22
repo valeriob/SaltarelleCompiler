@@ -24,10 +24,19 @@ namespace Saltarelle.Compiler.SCTask {
 		}
 
 		public override bool Execute() {
-			new AppDomainInitializer().DoIt();
-			var asm = Assembly.Load("SCTaskWorker");
-			var worker = asm.GetType("Saltarelle.Compiler.SCTask.Worker");
-			return (bool)worker.GetMethod("DoWork").Invoke(null, new object[] { this, new Func<AppDomain>(CreateAppDomain) });
+			var oldOut = Console.Out;
+			var newOut = new StringWriter();
+			try {
+				Console.SetOut(newOut);
+				new AppDomainInitializer().DoIt();
+				var asm = Assembly.Load("SCTaskWorker");
+				var worker = asm.GetType("Saltarelle.Compiler.SCTask.Worker");
+				return (bool)worker.GetMethod("DoWork").Invoke(null, new object[] { this, new Func<AppDomain>(CreateAppDomain) });
+			}
+			finally {
+				Log.LogWarning("Console output: " + newOut.ToString());
+				Console.SetOut(oldOut);
+			}
 		}
 
 		public string KeyContainer { get; set; }

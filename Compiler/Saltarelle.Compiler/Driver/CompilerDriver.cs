@@ -355,7 +355,7 @@ namespace Saltarelle.Compiler.Driver {
 				AppDomain ad = null;
 				var actualOut = Console.Out;
 				try {
-					Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
+					//Console.SetOut(new StringWriter());	// I don't trust the third-party libs to not generate spurious random messages, so make sure that any of those messages are suppressed.
 
 					var er = new ErrorReporterWrapper(_errorReporter, actualOut);
 
